@@ -1,1 +1,3 @@
 # R4A.11_RIGOT_COURTY_NGUYEN
+Projet réalisé par Edith RIGOT & Julie COURTY NGUYEN
+G4A
