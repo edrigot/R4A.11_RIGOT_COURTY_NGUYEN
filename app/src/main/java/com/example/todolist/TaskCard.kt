@@ -1,6 +1,7 @@
 package com.example.todolist
 
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,11 +17,14 @@ import com.example.todolist.ui.theme.*
 @Composable
 fun TaskCard(
     task: Task,
+    onClick: () -> Unit
 ) {
+
 
     Card(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MediumGrayCard)
     ) {
@@ -30,7 +34,6 @@ fun TaskCard(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             
             Spacer(modifier = Modifier.width(8.dp))
             
@@ -39,11 +42,13 @@ fun TaskCard(
                 modifier = Modifier.weight(1f),
                 fontSize = 18.sp,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
-                color = Color.Black
+                color = Black
             )
             
 
+            
             Spacer(modifier = Modifier.width(8.dp))
+            
 
         }
     }

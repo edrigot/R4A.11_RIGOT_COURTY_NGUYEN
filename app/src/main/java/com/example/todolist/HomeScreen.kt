@@ -31,7 +31,6 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
     ) {
         Spacer(modifier = Modifier.height(20.dp))
         
-
         Text(
             text = "Hello World !",
             fontSize = 50.sp,
@@ -41,14 +40,11 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
         
         Spacer(modifier = Modifier.height(28.dp))
         
-        //ligne du bouton +
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            
             IconButton(
                 onClick = { navController.navigate("form") },
                 modifier = Modifier.size(32.dp)
@@ -64,7 +60,6 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        //liste des tâches
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = DarkBackground,
@@ -72,18 +67,18 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
         ) {
             LazyColumn(
                 modifier = Modifier.padding(16.dp)
-                ) {
-                    items(tasks) { task ->
-                        Column {
-                            TaskCard(
-                                task = task,
-
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 12.dp),
-                                thickness = 1.dp,
-                                color = Color.Black.copy(alpha = 0.5f)
-                            )
+            ) {
+                items(tasks) { task ->
+                    Column {
+                        TaskCard(
+                            task = task,
+                            onClick = { navController.navigate("form/${task.id}") },
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            thickness = 1.dp,
+                            color = Color.Black.copy(alpha = 0.5f)
+                        )
                     }
                 }
             }

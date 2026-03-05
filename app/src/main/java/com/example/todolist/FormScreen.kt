@@ -15,11 +15,23 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.todolist.controller.TaskController
 import com.example.todolist.ui.theme.*
+import com.example.todolist.data.Task
 
 @Composable
-fun FormScreen(navController: NavController, controller: TaskController) {
+fun FormScreen(navController: NavController, controller: TaskController, taskId: Int? = null) {
+    val tasks by controller.tasks.collectAsState()
+    val existingTask = tasks.find { it.id == taskId }
+
     var nameTask by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+
+
+    LaunchedEffect(existingTask) {
+        if (existingTask != null) {
+            nameTask = existingTask.name
+            description = existingTask.description
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -60,7 +72,7 @@ fun FormScreen(navController: NavController, controller: TaskController) {
 
         Spacer(modifier = Modifier.height(60.dp))
 
-        // fond de la description
+        // fond description
         Surface(
             color = LightGraySurface,
             shape = RoundedCornerShape(16.dp),
@@ -103,7 +115,7 @@ fun FormScreen(navController: NavController, controller: TaskController) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // enregistrer
+        // enregistrer ou modifier
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.End,
@@ -112,7 +124,11 @@ fun FormScreen(navController: NavController, controller: TaskController) {
             Button(
                 onClick = {
                     if (nameTask.isNotBlank()) {
-                        controller.addTask(nameTask, description)
+                        if (existingTask != null) {
+                            controller.updateTask(existingTask.copy(name = nameTask, description = description))
+                        } else {
+                            controller.addTask(nameTask, description)
+                        }
                         navController.popBackStack()
                     }
                 },
@@ -125,7 +141,11 @@ fun FormScreen(navController: NavController, controller: TaskController) {
                 modifier = Modifier.width(160.dp).height(50.dp),
                 contentPadding = PaddingValues(0.dp)
             ) {
-                Text("Enregistrer", color = Black, fontSize = 24.sp)
+                Text(
+                    text = if (existingTask != null) "Modifier" else "Enregistrer",
+                    color = Black, 
+                    fontSize = 24.sp
+                )
             }
         }
     }
