@@ -14,7 +14,6 @@ val Pink40 = Color(0xFF7D5260)
 val DarkBackground = Color(0xFF2D242D)
 val LightGraySurface = Color(0xFFD9D9D9)
 val MediumGrayCard = Color(0xFFA0A0A0)
-
 val LightGreen = Color(0xFF7AA95C)
 val Transparent = Color.Transparent
 val White = Color.White

@@ -10,16 +10,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * CONTROLLER (MVC)
- * Fait le lien entre le Model (Room) et la View (Composables).
- * Contient toute la logique métier.
- */
+
 class TaskController(application: Application) : AndroidViewModel(application) {
 
     private val dao = TaskDatabase.getDatabase(application).taskDao()
 
-    // Liste des tâches exposée à la View, mise à jour automatiquement
     val tasks: StateFlow<List<Task>> = dao.getAllTasks()
         .stateIn(
             scope = viewModelScope,
@@ -27,18 +22,13 @@ class TaskController(application: Application) : AndroidViewModel(application) {
             initialValue = emptyList()
         )
 
-    fun addTask(name: String, description: String) {
+    fun addTask(name: String, description: String, deadline: String? = null) {
         if (name.isBlank()) return
         viewModelScope.launch {
-            dao.insertTask(Task(name = name, description = description))
+            dao.insertTask(Task(name = name, description = description, deadline = deadline))
         }
     }
 
-    fun deleteTask(task: Task) {
-        viewModelScope.launch {
-            dao.deleteTask(task)
-        }
-    }
 
     fun updateTask(task: Task) {
         viewModelScope.launch {
@@ -46,4 +36,3 @@ class TaskController(application: Application) : AndroidViewModel(application) {
         }
     }
 }
-
