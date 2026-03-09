@@ -73,6 +73,9 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                         TaskCard(
                             task = task,
                             onClick = { navController.navigate("form/${task.id}") },
+                            onToggleComplete = {
+                                controller.updateTask(task.copy(isCompleted = !task.isCompleted))
+                            }
                         )
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 12.dp),
