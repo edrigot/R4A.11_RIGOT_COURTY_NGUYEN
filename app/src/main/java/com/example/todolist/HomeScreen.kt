@@ -175,6 +175,7 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                             TaskCard(
                                 task = task,
                                 onClick = { navController.navigate("form/${task.id}") },
+                                onDelete = { controller.deleteTask(task) },
                                 onToggleComplete = {
                                     val wasNotCompleted = !task.isCompleted
                                     controller.updateTask(task.copy(isCompleted = !task.isCompleted))
@@ -184,6 +185,7 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                                         showConfetti = true
                                     }
                                 }
+
                             )
                             HorizontalDivider(
                                 modifier = Modifier.padding(vertical = 12.dp),

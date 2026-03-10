@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +26,7 @@ import java.util.*
 fun TaskCard(
     task: Task,
     onClick: () -> Unit,
+    onDelete: () -> Unit,
     onToggleComplete: () -> Unit
 ) {
     // Affichage de l'état
@@ -89,9 +92,17 @@ fun TaskCard(
                     fontWeight = FontWeight.Medium,
                     color = statusInfo.second
                 )
-
             }
             
+            // Bouton supprimer
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Supprimer",
+                    tint = Color.DarkGray
+                )
+            }
+
             Spacer(modifier = Modifier.width(8.dp))
 
             // Petit carré de validation
