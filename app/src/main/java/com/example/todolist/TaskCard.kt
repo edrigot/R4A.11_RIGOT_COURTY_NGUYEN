@@ -1,13 +1,12 @@
 package com.example.todolist
 
-import android.hardware.lights.Light
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.todolist.data.Task
 import com.example.todolist.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun TaskCard(
@@ -25,6 +26,34 @@ fun TaskCard(
     onClick: () -> Unit,
     onToggleComplete: () -> Unit
 ) {
+    // Affichage de l'état
+    val statusInfo = remember(task.isCompleted, task.deadline) {
+        if (task.isCompleted) {
+            "Réalisé" to LightGreen
+        } else if (!task.deadline.isNullOrBlank()) {
+            try {
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val deadlineDate = sdf.parse(task.deadline)
+                val today = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.time
+                
+                if (deadlineDate != null && deadlineDate.before(today)) {
+                    "En retard" to Color.Red
+                } else {
+                    "À faire" to Black
+                }
+            } catch (e: Exception) {
+                "À faire" to Black
+            }
+        } else {
+            "À faire" to Black
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,20 +71,30 @@ fun TaskCard(
         ) {
             Spacer(modifier = Modifier.width(8.dp))
             
-            Text(
-                text = task.name,
-                modifier = Modifier.weight(1f),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = if (task.isCompleted) Color.Gray else Black,
-                style = TextStyle(
-                    textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.name,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (task.isCompleted) Color.Gray else Black,
+                    style = TextStyle(
+                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                    )
                 )
-            )
+                
+                // Affichage de l'état sous le titre
+                Text(
+                    text = statusInfo.first,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = statusInfo.second
+                )
+
+            }
             
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Petit carré de validation (peut être décoché)
+            // Petit carré de validation
             Box(
                 modifier = Modifier
                     .size(24.dp)

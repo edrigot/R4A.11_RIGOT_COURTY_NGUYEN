@@ -1,5 +1,6 @@
 package com.example.todolist
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,11 +18,41 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.todolist.controller.TaskController
+import com.example.todolist.data.Task
 import com.example.todolist.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.*
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(navController: NavController, controller: TaskController) {
     val tasks by controller.tasks.collectAsState()
+
+    // Fonction pour déterminer l'état d'une tâche
+    fun getTaskStatus(task: Task): String {
+        if (task.isCompleted) return "Réalisé"
+        if (!task.deadline.isNullOrBlank()) {
+            try {
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val deadlineDate = sdf.parse(task.deadline)
+                val today = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.time
+                if (deadlineDate != null && deadlineDate.before(today)) return "En retard"
+            } catch (e: Exception) {}
+        }
+        return "À faire"
+    }
+
+    // Grouper les tâches par état
+    val groupedTasks = remember(tasks) {
+        tasks.groupBy { getTaskStatus(it) }
+    }
+
+    val statusOrder = listOf("En retard", "À faire", "Réalisé")
 
     Column(
         modifier = Modifier
@@ -68,20 +99,34 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
             LazyColumn(
                 modifier = Modifier.padding(16.dp)
             ) {
-                items(tasks) { task ->
-                    Column {
-                        TaskCard(
-                            task = task,
-                            onClick = { navController.navigate("form/${task.id}") },
-                            onToggleComplete = {
-                                controller.updateTask(task.copy(isCompleted = !task.isCompleted))
+                statusOrder.forEach { status ->
+                    val tasksInStatus = groupedTasks[status] ?: emptyList()
+                    if (tasksInStatus.isNotEmpty()) {
+                        stickyHeader {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(DarkBackground)
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
+                        
+                        items(tasksInStatus) { task ->
+                            Column {
+                                TaskCard(
+                                    task = task,
+                                    onClick = { navController.navigate("form/${task.id}") },
+                                    onToggleComplete = {
+                                        controller.updateTask(task.copy(isCompleted = !task.isCompleted))
+                                    }
+                                )
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    thickness = 1.dp,
+                                    color = Color.Black.copy(alpha = 0.5f)
+                                )
                             }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 12.dp),
-                            thickness = 1.dp,
-                            color = Color.Black.copy(alpha = 0.5f)
-                        )
+                        }
                     }
                 }
             }
