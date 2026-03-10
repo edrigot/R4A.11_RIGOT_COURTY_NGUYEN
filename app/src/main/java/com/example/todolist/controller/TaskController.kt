@@ -22,6 +22,9 @@ class TaskController(application: Application) : AndroidViewModel(application) {
             initialValue = emptyList()
         )
 
+    // Vérification de l'affichage des retards
+    var hasCheckedOverdue: Boolean = false
+
     fun addTask(name: String, description: String, deadline: String? = null) {
         if (name.isBlank()) return
         viewModelScope.launch {
