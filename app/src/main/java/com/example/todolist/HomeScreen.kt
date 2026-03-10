@@ -27,6 +27,8 @@ import java.util.*
 @Composable
 fun HomeScreen(navController: NavController, controller: TaskController) {
     val tasks by controller.tasks.collectAsState()
+    var showOverdueDialog by remember { mutableStateOf(false) }
+    var hasCheckedOverdue by remember { mutableStateOf(false) }
 
     // Fonction pour déterminer l'état d'une tâche
     fun getTaskStatus(task: Task): String {
@@ -50,6 +52,40 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
     // Grouper les tâches par état
     val groupedTasks = remember(tasks) {
         tasks.groupBy { getTaskStatus(it) }
+    }
+
+    val overdueTasks = groupedTasks.getOrDefault("En retard", emptyList())
+
+    // Affichage du pop up des retards
+    LaunchedEffect(tasks) {
+        if (tasks.isNotEmpty() && !hasCheckedOverdue) {
+            if (overdueTasks.isNotEmpty()) {
+                showOverdueDialog = true
+            }
+            hasCheckedOverdue = true
+        }
+    }
+
+    if (showOverdueDialog) {
+        AlertDialog(
+            onDismissRequest = { showOverdueDialog = false },
+            title = { Text(text = "Tâches en retard !", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    overdueTasks.forEach { task ->
+                        Text("• ${task.name}", fontWeight = FontWeight.Medium, color = Color.Red)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showOverdueDialog = false }) {
+                    Text("D'accord")
+                }
+            },
+            containerColor = Color.White,
+            titleContentColor = Color.Black,
+            textContentColor = Color.Black
+        )
     }
 
     val statusOrder = listOf("En retard", "À faire", "Réalisé")
@@ -88,7 +124,7 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
         
         Surface(
@@ -100,7 +136,7 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                 modifier = Modifier.padding(16.dp)
             ) {
                 statusOrder.forEach { status ->
-                    val tasksInStatus = groupedTasks[status] ?: emptyList()
+                    val tasksInStatus = groupedTasks.getOrDefault(status, emptyList())
                     if (tasksInStatus.isNotEmpty()) {
                         stickyHeader {
                             Box(
