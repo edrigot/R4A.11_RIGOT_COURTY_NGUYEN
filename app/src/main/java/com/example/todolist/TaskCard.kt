@@ -30,7 +30,7 @@ fun TaskCard(
     onToggleComplete: () -> Unit
 ) {
     // Affichage de l'état
-    val statusInfo = remember(task.isCompleted, task.deadline) {
+    val statusText = remember(task.isCompleted, task.deadline) {
         if (task.isCompleted) {
             "Réalisé" to LightGreen
         } else if (!task.deadline.isNullOrBlank()) {
@@ -54,6 +54,23 @@ fun TaskCard(
             }
         } else {
             "À faire" to Black
+        }
+    }
+
+    // Libellé de la périodicité
+    val periodicityLabel = remember(task.periodicity, task.periodicityDay) {
+        when (task.periodicity) {
+            "Quotidienne" -> "Tous les jours"
+            "Hebdomadaire" -> {
+                val days = listOf("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche")
+                val dayName = task.periodicityDay?.let { days.getOrNull(it - 1) } ?: "lundi"
+                "Tous les $dayName"
+            }
+            "Mensuelle" -> {
+                val day = task.periodicityDay ?: 1
+                "Tous les $day du mois"
+            }
+            else -> ""
         }
     }
 
@@ -85,13 +102,22 @@ fun TaskCard(
                     )
                 )
                 
-                // Affichage de l'état sous le titre
+                // Affichage de l'état
                 Text(
-                    text = statusInfo.first,
+                    text = statusText.first,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = statusInfo.second
+                    color = statusText.second
                 )
+
+                // Affichage de la périodicité sous l'état
+                if (periodicityLabel.isNotEmpty()) {
+                    Text(
+                        text = periodicityLabel,
+                        fontSize = 13.sp,
+                        color = if (task.isCompleted) Color.Gray else Color.DarkGray
+                    )
+                }
             }
             
             // Bouton supprimer

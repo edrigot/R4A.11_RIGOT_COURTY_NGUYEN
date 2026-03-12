@@ -30,6 +30,15 @@ fun FormScreen(navController: NavController, controller: TaskController, taskId:
     var nameTask by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var deadline by remember { mutableStateOf("") }
+    var periodicity by remember { mutableStateOf("Aucune") }
+    var periodicityDay by remember { mutableStateOf<Int?>(null) }
+    
+    val periodicityOptions = listOf("Aucune", "Quotidienne", "Hebdomadaire", "Mensuelle")
+    val daysOfWeek = listOf("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche")
+    val daysOfMonth = (1..31).toList()
+
+    var expandedPeriodicity by remember { mutableStateOf(false) }
+    var expandedDay by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -50,6 +59,8 @@ fun FormScreen(navController: NavController, controller: TaskController, taskId:
             nameTask = existingTask.name
             description = existingTask.description
             deadline = existingTask.deadline ?: ""
+            periodicity = existingTask.periodicity ?: "Aucune"
+            periodicityDay = existingTask.periodicityDay
         }
     }
 
@@ -131,7 +142,7 @@ fun FormScreen(navController: NavController, controller: TaskController, taskId:
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
+                .height(180.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -166,6 +177,131 @@ fun FormScreen(navController: NavController, controller: TaskController, taskId:
             }
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Périodicité
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Dropdown Périodicité
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Périodicité:",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Black
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Box {
+                    Surface(
+                        color = LightGraySurface,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .clickable { expandedPeriodicity = true }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = periodicity, color = Black)
+                            Text(text = "▼", color = Black, fontSize = 12.sp)
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = expandedPeriodicity,
+                        onDismissRequest = { expandedPeriodicity = false },
+                        modifier = Modifier.background(White)
+                    ) {
+                        periodicityOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(text = option, color = Black) },
+                                onClick = {
+                                    periodicity = option
+                                    expandedPeriodicity = false
+                                    // Reset periodicityDay when changing periodicity
+                                    if (option != "Hebdomadaire" && option != "Mensuelle") {
+                                        periodicityDay = null
+                                    } else if (periodicityDay == null) {
+                                        periodicityDay = 1
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Dropdown spécifique pour Hebdomadaire ou Mensuelle
+            if (periodicity == "Hebdomadaire" || periodicity == "Mensuelle") {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (periodicity == "Hebdomadaire") "Le :" else "Le jour :",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Black
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box {
+                        Surface(
+                            color = LightGraySurface,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .clickable { expandedDay = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                val displayText = if (periodicity == "Hebdomadaire") {
+                                    daysOfWeek.getOrElse((periodicityDay ?: 1) - 1) { "Lundi" }
+                                } else {
+                                    periodicityDay?.toString() ?: "1"
+                                }
+                                Text(text = displayText, color = Black)
+                                Text(text = "▼", color = Black, fontSize = 12.sp)
+                            }
+                        }
+                        DropdownMenu(
+                            expanded = expandedDay,
+                            onDismissRequest = { expandedDay = false },
+                            modifier = Modifier
+                                .background(White)
+                                .heightIn(max = 200.dp)
+                        ) {
+                            if (periodicity == "Hebdomadaire") {
+                                daysOfWeek.forEachIndexed { index, day ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = day, color = Black) },
+                                        onClick = {
+                                            periodicityDay = index + 1
+                                            expandedDay = false
+                                        }
+                                    )
+                                }
+                            } else {
+                                daysOfMonth.forEach { day ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = day.toString(), color = Black) },
+                                        onClick = {
+                                            periodicityDay = day
+                                            expandedDay = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
         // Enregistrer ou modifier
@@ -181,10 +317,12 @@ fun FormScreen(navController: NavController, controller: TaskController, taskId:
                             controller.updateTask(existingTask.copy(
                                 name = nameTask, 
                                 description = description,
-                                deadline = deadline
+                                deadline = deadline,
+                                periodicity = periodicity,
+                                periodicityDay = periodicityDay
                             ))
                         } else {
-                            controller.addTask(nameTask, description, deadline)
+                            controller.addTask(nameTask, description, deadline, periodicity, periodicityDay)
                         }
                         navController.popBackStack()
                     }
