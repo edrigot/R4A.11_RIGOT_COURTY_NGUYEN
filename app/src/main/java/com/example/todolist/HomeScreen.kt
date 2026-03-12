@@ -15,6 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +31,56 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
 import kotlin.random.Random
+
+@Composable
+fun DinoExplosionEffect(visible: Boolean, onAnimationEnd: () -> Unit) {
+    if (!visible) return
+    val dinoCount = 100
+    val duration = 2500
+    val anim = remember { Animatable(0f) }
+    
+    LaunchedEffect(Unit) {
+        anim.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(duration, easing = LinearOutSlowInEasing)
+        )
+        onAnimationEnd()
+    }
+
+    val textMeasurer = rememberTextMeasurer()
+    val dinoEmojis = listOf("🦖", "🦕")
+    val style = TextStyle(fontSize = 35.sp)
+
+    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+        val center = Offset(size.width / 2, size.height / 2)
+        val progress = anim.value
+        val maxRadius = size.minDimension * 1.5f
+        
+        for (i in 0 until dinoCount) {
+            val rand = Random(i.toLong())
+            val emoji = dinoEmojis[rand.nextInt(dinoEmojis.size)]
+            val angle = (2 * PI * i / dinoCount + rand.nextFloat() * 0.4 - 0.2).toFloat()
+            val speed = maxRadius * (0.2f + rand.nextFloat() * 1.3f)
+            
+            val x = center.x + cos(angle) * speed * progress
+            val y = center.y + sin(angle) * speed * progress + (progress * progress * 800f)
+            
+            val rotation = progress * 720f * (rand.nextFloat() - 0.5f)
+            
+            rotate(rotation, Offset(x, y)) {
+                val textLayoutResult = textMeasurer.measure(
+                    text = AnnotatedString(emoji),
+                    style = style
+                )
+                drawText(
+                    textLayoutResult = textLayoutResult,
+                    topLeft = Offset(x - textLayoutResult.size.width / 2, y - textLayoutResult.size.height / 2),
+                    alpha = 1f - (progress * 0.5f)
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun FireworkConfettiEffect(visible: Boolean, onAnimationEnd: () -> Unit) {
@@ -80,7 +133,9 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
     val tasks by controller.tasks.collectAsState()
     var showOverdueDialog by remember { mutableStateOf(false) }
     var showConfetti by remember { mutableStateOf(false) }
+    var showDinoExplosion by remember { mutableStateOf(false) }
     var confettiKey by remember { mutableStateOf(0) }
+    var dinoKey by remember { mutableStateOf(0) }
 
     // Fonction pour déterminer l'état d'une tâche
     fun getTaskStatus(task: Task): String {
@@ -99,6 +154,27 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
             } catch (e: Exception) {}
         }
         return "À faire"
+    }
+
+    // Calcul de la progression
+    val totalTasks = tasks.size
+    val completedTasksCount = tasks.count { it.isCompleted }
+    val progress = if (totalTasks > 0) completedTasksCount.toFloat() / totalTasks else 0f
+    
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+        label = "progress"
+    )
+
+    // Déclenchement de l'explosion de dinosaures quand 100% est atteint
+    var lastCompletedCount by remember { mutableStateOf(completedTasksCount) }
+    LaunchedEffect(completedTasksCount, totalTasks) {
+        if (completedTasksCount == totalTasks && totalTasks > 0 && completedTasksCount > lastCompletedCount) {
+            dinoKey++
+            showDinoExplosion = true
+        }
+        lastCompletedCount = completedTasksCount
     }
 
     // Grouper les tâches par état, avec priorité au drapeau
@@ -142,6 +218,37 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
+
+            // Barre de progression avec dinosaure
+            if (totalTasks > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LinearProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(10.dp),
+                        color = DarkBackground,
+                        trackColor = Color.LightGray.copy(alpha = 0.3f),
+                        strokeCap = StrokeCap.Round
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "🦖",
+                        fontSize = 24.sp
+                    )
+                }
+                Text(
+                    text = "${(progress * 100).toInt()}% complété",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
             
             Spacer(modifier = Modifier.height(28.dp))
             
@@ -184,9 +291,12 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                                     val wasNotCompleted = !task.isCompleted
                                     controller.updateTask(task.copy(isCompleted = !task.isCompleted))
                                     if (wasNotCompleted) {
-                                        showConfetti = false
-                                        confettiKey++
-                                        showConfetti = true
+                                        // On n'affiche les confettis que si ce n'est pas la dernière tâche
+                                        if (completedTasksCount + 1 < totalTasks) {
+                                            showConfetti = false
+                                            confettiKey++
+                                            showConfetti = true
+                                        }
                                     }
                                 }
 
@@ -203,6 +313,9 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
         }
         key(confettiKey) {
             FireworkConfettiEffect(visible = showConfetti) { showConfetti = false }
+        }
+        key(dinoKey) {
+            DinoExplosionEffect(visible = showDinoExplosion) { showDinoExplosion = false }
         }
         if (showOverdueDialog) {
             AlertDialog(
