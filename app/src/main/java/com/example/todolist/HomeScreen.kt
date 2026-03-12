@@ -35,7 +35,7 @@ import kotlin.random.Random
 @Composable
 fun DinoExplosionEffect(visible: Boolean, onAnimationEnd: () -> Unit) {
     if (!visible) return
-    val dinoCount = 100
+    val dinoCount = 120
     val duration = 2500
     val anim = remember { Animatable(0f) }
     
@@ -134,8 +134,8 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
     var showOverdueDialog by remember { mutableStateOf(false) }
     var showConfetti by remember { mutableStateOf(false) }
     var showDinoExplosion by remember { mutableStateOf(false) }
-    var confettiKey by remember { mutableStateOf(0) }
-    var dinoKey by remember { mutableStateOf(0) }
+    var confettiKey by remember { mutableIntStateOf(0) }
+    var dinoKey by remember { mutableIntStateOf(0) }
 
     // Fonction pour déterminer l'état d'une tâche
     fun getTaskStatus(task: Task): String {
@@ -168,7 +168,7 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
     )
 
     // Déclenchement de l'explosion de dinosaures quand 100% est atteint
-    var lastCompletedCount by remember { mutableStateOf(completedTasksCount) }
+    var lastCompletedCount by remember { mutableIntStateOf(completedTasksCount) }
     LaunchedEffect(completedTasksCount, totalTasks) {
         if (completedTasksCount == totalTasks && totalTasks > 0 && completedTasksCount > lastCompletedCount) {
             dinoKey++
@@ -219,26 +219,37 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                 color = Color.Black
             )
 
-            // Barre de progression avec dinosaure
+            // Barre de progression avec dinosaure et feuille qui suit
             if (totalTasks > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    LinearProgressIndicator(
-                        progress = { animatedProgress },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(10.dp),
-                        color = DarkBackground,
-                        trackColor = Color.LightGray.copy(alpha = 0.3f),
-                        strokeCap = StrokeCap.Round
-                    )
+                    BoxWithConstraints(modifier = Modifier.weight(1f).height(30.dp), contentAlignment = Alignment.CenterStart) {
+                        val barWidth = this.maxWidth
+                        LinearProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(10.dp)
+                                .align(Alignment.Center),
+                            color = DarkBackground,
+                            trackColor = Color.LightGray.copy(alpha = 0.3f),
+                            strokeCap = StrokeCap.Round
+                        )
+                        Text(
+                            text = "🍖",
+                            fontSize = 20.sp,
+                            modifier = Modifier
+                                .offset(x = barWidth * animatedProgress - 12.dp)
+                                .align(Alignment.CenterStart)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "🦖",
-                        fontSize = 24.sp
+                        fontSize = 32.sp
                     )
                 }
                 Text(
