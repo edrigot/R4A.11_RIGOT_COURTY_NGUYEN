@@ -12,5 +12,6 @@ data class Task(
     val isCompleted: Boolean = false,
     val deadline: String? = null,
     val periodicity: String? = null, // "Aucune", "Quotidienne", "Hebdomadaire", "Mensuelle"
-    val periodicityDay: Int? = null // Jour de la semaine (1-7) ou jour du mois (1-31)
+    val periodicityDay: Int? = null, // Jour de la semaine (1-7) ou jour du mois (1-31)
+    val isPriority: Boolean = false
 )

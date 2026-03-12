@@ -101,16 +101,19 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
         return "À faire"
     }
 
-    // Grouper les tâches par état
+    // Grouper les tâches par état, avec priorité au drapeau
     val sortedTasks = remember(tasks) {
-        tasks.sortedBy { task ->
-            when (getTaskStatus(task)) {
-                "En retard" -> 0
-                "À faire" -> 1
-                "Réalisé" -> 2
-                else -> 3
-            }
-        }
+        tasks.sortedWith(
+            compareByDescending<Task> { it.isPriority }
+                .thenBy { task ->
+                    when (getTaskStatus(task)) {
+                        "En retard" -> 0
+                        "À faire" -> 1
+                        "Réalisé" -> 2
+                        else -> 3
+                    }
+                }
+        )
     }
 
     // Affichage du pop up des retards
@@ -170,12 +173,13 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                 LazyColumn(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    items(sortedTasks) { task ->
+                    items(sortedTasks, key = { it.id }) { task ->
                         Column {
                             TaskCard(
                                 task = task,
                                 onClick = { navController.navigate("form/${task.id}") },
                                 onDelete = { controller.deleteTask(task) },
+                                onTogglePriority = { controller.updateTask(task.copy(isPriority = !task.isPriority)) },
                                 onToggleComplete = {
                                     val wasNotCompleted = !task.isCompleted
                                     controller.updateTask(task.copy(isCompleted = !task.isCompleted))

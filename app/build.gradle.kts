@@ -52,6 +52,11 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.core.ktx)
+    
+    // Pour les icônes étendues (Flag, etc.)
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.cronet.embedded)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

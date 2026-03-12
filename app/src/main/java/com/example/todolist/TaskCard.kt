@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.todolist.data.Task
 import com.example.todolist.ui.theme.*
+import org.chromium.base.Flag
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -27,7 +30,8 @@ fun TaskCard(
     task: Task,
     onClick: () -> Unit,
     onDelete: () -> Unit,
-    onToggleComplete: () -> Unit
+    onToggleComplete: () -> Unit,
+    onTogglePriority: () -> Unit
 ) {
     // Affichage de l'état
     val statusText = remember(task.isCompleted, task.deadline) {
@@ -89,7 +93,20 @@ fun TaskCard(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.width(8.dp))
+            // Petit drapeau de priorité à gauche
+            IconButton(
+                onClick = onTogglePriority,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = if (task.isPriority) Icons.Default.Flag else Icons.Outlined.Flag,
+                    contentDescription = "Priorité",
+                    tint = if (task.isPriority) Color.Red else Color.Gray,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
