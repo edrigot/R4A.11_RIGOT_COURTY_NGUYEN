@@ -30,7 +30,8 @@ class TaskController(application: Application) : AndroidViewModel(application) {
         description: String, 
         deadline: String? = null, 
         periodicity: String? = null,
-        periodicityDay: Int? = null
+        periodicityDay: Int? = null,
+        imageUri: String? = null
     ) {
         if (name.isBlank()) return
         viewModelScope.launch {
@@ -39,7 +40,8 @@ class TaskController(application: Application) : AndroidViewModel(application) {
                 description = description, 
                 deadline = deadline, 
                 periodicity = periodicity,
-                periodicityDay = periodicityDay
+                periodicityDay = periodicityDay,
+                imageUri = imageUri
             ))
         }
     }

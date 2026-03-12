@@ -57,6 +57,9 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.cronet.embedded)
 
+    // Coil pour le chargement d'images
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
