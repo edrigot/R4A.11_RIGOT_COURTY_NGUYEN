@@ -3,6 +3,7 @@ package com.example.todolist
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -177,19 +178,33 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
         lastCompletedCount = completedTasksCount
     }
 
+    var expanded by remember { mutableStateOf(false) }
+    var selectedFilter by remember { mutableStateOf("Tous") }
+
     // Grouper les tâches par état, avec priorité au drapeau
-    val sortedTasks = remember(tasks) {
-        tasks.sortedWith(
-            compareByDescending<Task> { it.isPriority }
-                .thenBy { task ->
-                    when (getTaskStatus(task)) {
-                        "En retard" -> 0
-                        "À faire" -> 1
-                        "Réalisé" -> 2
-                        else -> 3
+    val sortedTasks = remember(tasks, selectedFilter) {
+        val filtered = when (selectedFilter) {
+            "À faire" -> tasks.filter { getTaskStatus(it) == "À faire" }
+            "Réalisé" -> tasks.filter { getTaskStatus(it) == "Réalisé" }
+            "En retard" -> tasks.filter { getTaskStatus(it) == "En retard" }
+            else -> tasks
+        }
+        val sorted = when (selectedFilter) {
+            "Plus récentes" -> filtered.sortedByDescending { it.id }
+            "Plus anciennes" -> filtered.sortedBy { it.id }
+            else -> filtered.sortedWith(
+                compareByDescending<Task> { it.isPriority }
+                    .thenBy { task ->
+                        when (getTaskStatus(task)) {
+                            "En retard" -> 0
+                            "À faire" -> 1
+                            "Réalisé" -> 2
+                            else -> 3
+                        }
                     }
-                }
-        )
+            )
+        }
+        sorted
     }
 
     // Affichage du pop up des retards
@@ -219,7 +234,7 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                 color = Color.Black
             )
 
-            // Barre de progression avec dinosaure et feuille qui suit
+            // Barre de progression avec dinosaure et smiley qui suit
             if (totalTasks > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
@@ -261,7 +276,7 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                 )
             }
             
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -279,12 +294,50 @@ fun HomeScreen(navController: NavController, controller: TaskController) {
                         modifier = Modifier.size(32.dp)
                     )
                 }
+                // Rectangle de filtre à droite du bouton ajouter
+                Box {
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(8.dp),
+                        shadowElevation = 4.dp,
+                        modifier = Modifier
+                            .height(40.dp)
+                            .width(130.dp)
+                            .padding(start = 8.dp)
+                            .clickable { expanded = true }
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(selectedFilter, fontSize = 15.sp, color = Color.Black)
+                            Text("▼", color = Color.Black, fontSize = 13.sp)
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(Color.White)
+                    ) {
+                        DropdownMenuItem(text = { Text("Tous", color = Color.Black) }, onClick = { selectedFilter = "Tous"; expanded = false })
+                        DropdownMenuItem(text = { Text("À faire", color = Color.Black) }, onClick = { selectedFilter = "À faire"; expanded = false })
+                        DropdownMenuItem(text = { Text("Réalisé", color = Color.Black) }, onClick = { selectedFilter = "Réalisé"; expanded = false })
+                        DropdownMenuItem(text = { Text("En retard", color = Color.Black) }, onClick = { selectedFilter = "En retard"; expanded = false })
+                        HorizontalDivider()
+                        DropdownMenuItem(text = { Text("Plus récentes", color = Color.Black) }, onClick = { selectedFilter = "Plus récentes"; expanded = false })
+                        DropdownMenuItem(text = { Text("Plus anciennes", color = Color.Black) }, onClick = { selectedFilter = "Plus anciennes"; expanded = false })
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
             
             Surface(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(bottom = 32.dp),
                 color = DarkBackground,
                 shape = RoundedCornerShape(16.dp)
             ) {
